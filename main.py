@@ -2,15 +2,14 @@ import curses
 from curses import wrapper
 from settings import *
 
-
-
-
 class World:
 
-    def __init__(self, stdscr, map_path, world_map):
+    def __init__(self, stdscr, map_path, world_map, width, height):
         self.stdscr = stdscr
         self.map_path = map_path
         self.world_map = world_map
+        self.width = width
+        self.height = height
 
     def read_map(self):
         try:
@@ -20,6 +19,8 @@ class World:
                     for char in line.strip():
                         row.append(char)
                     self.world_map.append(row)
+            self.height = len(self.world_map)
+            self.width = len(self.world_map[0]) if self.world_map else 0
         except FileNotFoundError:
             print(f"Файл {self.map_path} не знайдено.")
         except Exception as e:
@@ -70,33 +71,42 @@ class Player():
     def set_player_pos(self, x, y):
         self.x = x
         self.y = y
-        self.stdscr.addstr(self.y, self.x, '@', curses.color_pair(5))
+        self.stdscr.addstr(self.y, self.x, '@', curses.color_pair(6))
     
-    def move(self, dir):
+    def move(self, dir, world):
         if dir == "UP":
             if self.y > 0:
-                self.y -= 1
+                if int(world.world_map[self.y-1][self.x]) not in CANT_WALK:
+                    self.y -= 1
         elif dir == "DOWN":
-            self.y += 1
+            if int(world.world_map[self.y+1][self.x]) not in CANT_WALK:
+                    self.y += 1
         elif dir == "LEFT":
             if self.x > 0:
-                self.x -= 1
+                if int(world.world_map[self.y][self.x-1]) not in CANT_WALK:
+                    self.x -= 1
         elif dir == "RIGHT":
-            self.x += 1
+            if self.x + 1 < world.width:
+                if int(world.world_map[self.y][self.x+1]) not in CANT_WALK:
+                    self.x += 1
+        
+        world.draw_map()
+        self.set_player_pos(self.x, self.y)
 
 def init_colors(stdscr):
     curses.init_pair(1, curses.COLOR_GREEN, curses.COLOR_GREEN)#Трава
     curses.init_pair(2, curses.COLOR_YELLOW, curses.COLOR_YELLOW)#Багнюка
     curses.init_pair(3, curses.COLOR_BLUE, curses.COLOR_BLUE)#Вода
-    curses.init_pair(4, curses.COLOR_RED, curses.COLOR_RED)#Ворог
-    curses.init_pair(5, curses.COLOR_WHITE, curses.COLOR_WHITE)#Гравець
+    curses.init_pair(4, curses.COLOR_BLACK, curses.COLOR_BLACK)#Службовий бар'єр
+    curses.init_pair(5, curses.COLOR_RED, curses.COLOR_RED)#Ворог
+    curses.init_pair(6, curses.COLOR_WHITE, curses.COLOR_WHITE)#Гравець
 
 def main(stdscr):
 
     curses.curs_set(0)
     stdscr.clear()
     init_colors(stdscr)
-    world = World(stdscr, map_path="map.txt", world_map=[])
+    world = World(stdscr, map_path="map.txt", world_map=[], width=0, height=0)
     world.read_map()
     world.draw_map()
     stdscr.refresh()
@@ -113,24 +123,17 @@ def main(stdscr):
             break
 
         if key in UP:
-            player.move("UP")
-            world.draw_map()
-            player.set_player_pos(player.x, player.y)
+            player.move("UP", world)
         
         if key in DOWN:
-            player.move("DOWN")
-            world.draw_map()
-            player.set_player_pos(player.x, player.y)
+            player.move("DOWN", world)
         
         if key in LEFT:
-            player.move("LEFT")
-            world.draw_map()
-            player.set_player_pos(player.x, player.y)
+            player.move("LEFT", world)
         
         if key in RIGHT:
-            player.move("RIGHT")
-            world.draw_map()
-            player.set_player_pos(player.x, player.y)
+            player.move("RIGHT", world)
+            
         
 
 wrapper(main)
