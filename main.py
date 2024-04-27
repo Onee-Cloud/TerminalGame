@@ -4,8 +4,21 @@ from curses import wrapper
 world_map = []
 
 class Player:
-    def __init__(self, name):
-        self.name = name
+    def __init__(self, speed, x, y):
+        self.speed = speed
+        self.x = x
+        self.y = y
+    
+    def read_pos(self):
+        try:
+            with open("player.txt", 'r') as file:
+                position = file.readline().strip().split(' ')
+                self.x = int(position[0])
+                self.y = int(position[1])
+        except FileNotFoundError:
+            print(f"Файл player.txt не знайдено.")
+        except Exception as e:
+            print(f"Помилка: {e}")
 
 def read_map():
     with open("map.txt", 'r') as file:
@@ -34,9 +47,14 @@ def main(stdscr):
     draw_map(stdscr)
     stdscr.refresh()
     
+    player = Player(speed=1,x=1,y=1)
+    player.read_pos()
+    stdscr.addstr(player.x, player.y, '@', curses.color_pair(5))
+    curses.curs_set(0)
     while True:
         key = stdscr.getch()
         if key == ord('q') or key == ord('Q'):
             break
+        
 
 wrapper(main)
