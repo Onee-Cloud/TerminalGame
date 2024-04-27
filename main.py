@@ -39,7 +39,7 @@ class World:
             for x in range(len(self.world_map[y])):
                 self.stdscr.addstr(y,x, str(self.world_map[y][x]), curses.color_pair(int(self.world_map[y][x])))
     
-class Player(World):
+class Player():
 
     def __init__(self, stdscr, player_path, speed, x, y):
         self.speed = speed
@@ -70,17 +70,19 @@ class Player(World):
     def set_player_pos(self, x, y):
         self.x = x
         self.y = y
-        self.stdscr.addstr(self.x, self.y, '@', curses.color_pair(5))
+        self.stdscr.addstr(self.y, self.x, '@', curses.color_pair(5))
     
     def move(self, dir):
         if dir == "UP":
-            print("Move UP")
+            if self.y > 0:
+                self.y -= 1
         elif dir == "DOWN":
-            pass
+            self.y += 1
         elif dir == "LEFT":
-            pass
+            if self.x > 0:
+                self.x -= 1
         elif dir == "RIGHT":
-            pass
+            self.x += 1
 
 def init_colors(stdscr):
     curses.init_pair(1, curses.COLOR_GREEN, curses.COLOR_GREEN)#Трава
@@ -112,15 +114,23 @@ def main(stdscr):
 
         if key in UP:
             player.move("UP")
+            world.draw_map()
+            player.set_player_pos(player.x, player.y)
         
         if key in DOWN:
             player.move("DOWN")
+            world.draw_map()
+            player.set_player_pos(player.x, player.y)
         
         if key in LEFT:
             player.move("LEFT")
+            world.draw_map()
+            player.set_player_pos(player.x, player.y)
         
         if key in RIGHT:
             player.move("RIGHT")
+            world.draw_map()
+            player.set_player_pos(player.x, player.y)
         
 
 wrapper(main)
